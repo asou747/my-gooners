@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* my custom class of aryan the beautiful */
+.custom-bg {
+  background-image: url('./assets/arni_bcg.jpg');
+  background-size: cover;
+  background-position: center;
+}
