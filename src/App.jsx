@@ -216,7 +216,7 @@ const App = () => {
   return (
     <div className="min-h-screen custom-bg text-white flex flex-col items-center p-4 sm:p-8 font-inter">
       <div className="bg-gray-800 p-6 sm:p-10 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col items-center space-y-6">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Generator & Vision Analyzer</h1>
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Generator & Vision Analyzer by Alexxx</h1>
         <p className="text-center text-gray-400 text-lg">
           Tell me your deepest and darkest desire, I'll create it, no naughty stuff, I'm watching you. Or upload your own sexy images.
         </p>
