@@ -20,19 +20,20 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      // NEW: Together AI API key retrieved from environment variables
+      // NOTE: Make sure your API key in .env.local is valid and you have remaining credits.
       const apiKey = import.meta.env.VITE_TOGETHER_AI_API_KEY;
       if (!apiKey) {
         throw new Error("API key is missing. Please add it to your .env.local file.");
       }
       const apiUrl = "https://api.together.xyz/v1/images/generations";
 
-      // NEW: Construct the payload for the Together AI request
+      // Construct the payload for the Together AI request
       const payload = {
-        model: "black-forest-labs/FLUX.1-schnell-Free",
+        // The model was changed back to a working text-to-image model.
+        model: "black-forest-labs/FLUX.1-schnell-Free", 
         prompt: prompt,
         n: 1,
-        size: "1150x1024" // Or another size like "512x512"
+        size: "1024x1024" // Or another size like "512x512"
       };
 
       // Perform the fetch call with exponential backoff for retries
@@ -67,10 +68,9 @@ const App = () => {
 
       const result = await response.json();
       
-      // NEW: Check if the Together AI response contains a valid image URL
+      // Check if the Together AI response contains a valid image URL
       if (result.data && result.data.length > 0 && result.data[0].url) {
         const imageUrlFromTogether = result.data[0].url;
-        // The API returns a URL, not base64 data, so we set the state directly
         setImageUrl(imageUrlFromTogether);
       } else {
         throw new Error('No image data found in the API response.');
@@ -80,7 +80,6 @@ const App = () => {
       console.error('Failed to generate image:', err);
       setError('Failed to generate image. Please try a different prompt.');
     } finally {
-      // Set loading state to false
       setIsLoading(false);
     }
   };
@@ -88,20 +87,20 @@ const App = () => {
   // Function to handle the image download
   const handleDownload = () => {
     if (imageUrl) {
-      // Create a temporary link element
       const link = document.createElement('a');
-      link.href = imageUrl; // Set the href to the image data URL
-      link.download = 'ai-image.png'; // Set the default filename for the download
+      link.href = imageUrl; 
+      link.download = 'ai-image.png'; 
       document.body.appendChild(link);
-      link.click(); // Programmatically click the link to trigger the download
-      document.body.removeChild(link); // Clean up the temporary link
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
   // UI rendering
   return (
     <div className="min-h-screen custom-bg text-white flex flex-col items-center p-4 sm:p-8 font-inter">
-      <div className="bg-gray-800 p-6 sm:p-10 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col items-center space-y-6">
+      {/* The main container styling has been removed to un-box the content. */}
+      <div className="max-w-2xl w-full flex flex-col items-center space-y-6">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Generator by AyyLexx</h1>
         <p className="text-center text-gray-400 text-lg">
           tell me your deepest and darkest desire, I'll create it, no naughty stuff, I'm watching you.
