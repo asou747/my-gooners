@@ -4,8 +4,10 @@ import React, { useState } from 'react';
 const App = () => {
   // State for the user's text prompt for image generation
   const [prompt, setPrompt] = useState('');
-  // State for the generated image URL (as a base64 string)
+  // State for the generated image URL or uploaded image URL
   const [imageUrl, setImageUrl] = useState('');
+  // State for the uploaded image file data (base64 string)
+  const [uploadedImageBase64, setUploadedImageBase64] = useState(null);
   // State for the AI-generated description of the image
   const [imageDescription, setImageDescription] = useState('');
   // State to handle the loading indicator for image generation
@@ -15,24 +17,28 @@ const App = () => {
   // State for error messages
   const [error, setError] = useState('');
 
-  // Function to handle the image generation API call
-  const generateImage = async () => {
-    // Clear previous error and image/description
+  // Function to reset all states for a new cycle
+  const resetState = () => {
     setError('');
     setImageUrl('');
+    setUploadedImageBase64(null);
     setImageDescription('');
-    // Set loading state to true for the image generation
+    setIsLoading(false);
+    setIsVisionLoading(false);
+  };
+
+  // Function to handle the image generation API call
+  const generateImage = async () => {
+    resetState();
     setIsLoading(true);
 
     try {
-      // NOTE: Make sure your API key in .env.local is valid and you have remaining credits.
       const apiKey = import.meta.env.VITE_TOGETHER_AI_API_KEY;
       if (!apiKey) {
         throw new Error("API key is missing. Please add it to your .env.local file.");
       }
       const apiUrl = "https://api.together.xyz/v1/images/generations";
 
-      // Construct the payload for the Together AI text-to-image request
       const payload = {
         model: "black-forest-labs/FLUX.1-schnell-Free", 
         prompt: prompt,
@@ -40,7 +46,6 @@ const App = () => {
         size: "1024x1024"
       };
 
-      // Perform the fetch call with exponential backoff for retries
       let response;
       let delay = 1000;
       const maxRetries = 5;
@@ -72,7 +77,6 @@ const App = () => {
 
       const result = await response.json();
       
-      // Check if the Together AI response contains a valid image URL
       if (result.data && result.data.length > 0 && result.data[0].url) {
         const imageUrlFromTogether = result.data[0].url;
         setImageUrl(imageUrlFromTogether);
@@ -92,8 +96,34 @@ const App = () => {
     }
   };
 
-  // NEW FUNCTION: Function to describe the image using a vision model
-  const describeImage = async (imgUrl) => {
+  // Function to handle the user's file upload
+  const handleImageUpload = (event) => {
+    resetState();
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result;
+        setImageUrl(dataUrl); // Display the data URL
+        const base64String = dataUrl.split(',')[1];
+        setUploadedImageBase64(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Function to analyze the uploaded image
+  const analyzeUploadedImage = () => {
+    if (uploadedImageBase64) {
+      // Use the base64 data to describe the image
+      describeImage(uploadedImageBase64, true);
+    } else {
+      setError('Please upload an image first.');
+    }
+  };
+
+  // Function to describe the image using a vision model
+  const describeImage = async (imageData, isBase64 = false) => {
     setIsVisionLoading(true);
     setImageDescription('');
 
@@ -101,7 +131,19 @@ const App = () => {
       const apiKey = import.meta.env.VITE_TOGETHER_AI_API_KEY;
       const apiUrl = "https://api.together.xyz/v1/chat/completions";
       
-      // Construct the payload for the VLM request
+      let imageContent;
+      if (isBase64) {
+        imageContent = {
+          type: "image_url",
+          image_url: { url: `data:image/jpeg;base64,${imageData}` }
+        };
+      } else {
+        imageContent = {
+          type: "image_url",
+          image_url: { url: imageData }
+        };
+      }
+
       const payload = {
         model: "meta-llama/Llama-Vision-Free", 
         messages: [
@@ -109,7 +151,7 @@ const App = () => {
             role: "user",
             content: [
               { type: "text", text: "Describe the image in detail." },
-              { type: "image_url", image_url: { url: imgUrl } }
+              imageContent
             ]
           }
         ]
@@ -153,7 +195,6 @@ const App = () => {
 
     } catch (err) {
       console.error('Failed to describe image:', err);
-      // You can set a specific error for the description part if you want
     } finally {
       setIsVisionLoading(false);
     }
@@ -175,12 +216,12 @@ const App = () => {
   return (
     <div className="min-h-screen custom-bg text-white flex flex-col items-center p-4 sm:p-8 font-inter">
       <div className="bg-gray-800 p-6 sm:p-10 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col items-center space-y-6">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Telephone by AyyLexx</h1>
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Generator & Vision Analyzer</h1>
         <p className="text-center text-gray-400 text-lg">
-          Tell me your deepest and darkest desire, I'll create it, no naughty stuff, I'm watching you.
+          Tell me your deepest and darkest desire, I'll create it, no naughty stuff, I'm watching you. Or upload your own sexy images.
         </p>
 
-        {/* Input area */}
+        {/* Input area for text prompt */}
         <div className="w-full">
           <textarea
             className="w-full p-4 rounded-xl text-gray-900 bg-gray-200 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition-all duration-300"
@@ -191,33 +232,63 @@ const App = () => {
           ></textarea>
         </div>
 
-        {/* Action button */}
+        {/* Action button for text-to-image generation */}
         <button
           onClick={generateImage}
           disabled={isLoading || !prompt}
           className={`w-full px-6 py-3 rounded-xl font-bold text-lg transition duration-300 transform shadow-lg
             ${isLoading || !prompt ? 'bg-gray-500 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:scale-105'}`}
         >
-          {isLoading ? 'Generating...' : 'Generate Image'}
+          {isLoading ? 'Generating Image...' : 'Generate Image'}
         </button>
+
+        {/* OR section for image upload */}
+        <div className="flex items-center justify-center space-x-2 my-4 w-full">
+          <hr className="flex-grow border-gray-600" />
+          <span className="text-gray-400 font-bold">OR put in your own image</span>
+          <hr className="flex-grow border-gray-600" />
+        </div>
+
+        {/* Image upload section */}
+        <div className="w-full space-y-4">
+          <label className="w-full flex flex-col items-center p-4 rounded-xl text-gray-900 bg-gray-200 hover:bg-gray-300 cursor-pointer transition-colors duration-300">
+            <span className="text-sm font-semibold text-gray-600">Click to upload an image</span>
+            <input 
+              type="file" 
+              className="hidden" 
+              accept="image/jpeg, image/png, image/jpg"
+              onChange={handleImageUpload}
+            />
+          </label>
+          {uploadedImageBase64 && (
+            <button
+              onClick={analyzeUploadedImage}
+              disabled={isVisionLoading}
+              className={`w-full px-6 py-3 rounded-xl font-bold text-lg transition duration-300 transform shadow-lg
+                ${isVisionLoading ? 'bg-gray-500 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700 hover:scale-105'}`}
+            >
+              {isVisionLoading ? 'Analyzing Image...' : 'Analyze Uploaded Image'}
+            </button>
+          )}
+        </div>
 
         {/* Display area for image, loading indicator, or error */}
         <div className="w-full flex justify-center items-center h-96 bg-gray-700 rounded-xl overflow-hidden shadow-inner">
-          {isLoading ? (
+          {isLoading || isVisionLoading ? (
             // Loading indicator
             <svg className="animate-spin h-10 w-10 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : imageUrl ? (
-            // Generated image
-            <img src={imageUrl} alt="Generated by AI" className="w-full h-full object-contain" />
+            // Generated or uploaded image
+            <img src={imageUrl} alt="AI Generated or Uploaded" className="w-full h-full object-contain" />
           ) : error ? (
             // Error message
             <p className="text-red-400 text-center">{error}</p>
           ) : (
             // Initial prompt
-            <p className="text-gray-400 text-center">Your generated image will appear here.</p>
+            <p className="text-gray-400 text-center">Your generated or uploaded image will appear here.</p>
           )}
         </div>
 
@@ -248,7 +319,7 @@ const App = () => {
               ) : imageDescription ? (
                 <p className="text-gray-200 text-left">{imageDescription}</p>
               ) : (
-                <p className="text-gray-400 text-center">Description will appear here.</p>
+                <p className="text-gray-400 text-center">Description will appear here after the image is analyzed.</p>
               )}
             </div>
           </div>
