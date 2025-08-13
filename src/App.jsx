@@ -175,13 +175,13 @@ const App = () => {
   return (
     <div className="min-h-screen custom-bg text-white flex flex-col items-center p-4 sm:p-8 font-inter">
       <div className="bg-gray-800 p-6 sm:p-10 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col items-center space-y-6">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Generator by AyyLexx</h1>
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-center text-indigo-400">AI Image Telephone by AyyLexx</h1>
         <p className="text-center text-gray-400 text-lg">
           Tell me your deepest and darkest desire, I'll create it, no naughty stuff, I'm watching you.
         </p>
 
         {/* Input area */}
-        <div className="w-full">
+        <div className="w-full">me
           <textarea
             className="w-full p-4 rounded-xl text-gray-900 bg-gray-200 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition-all duration-300"
             rows="3"
@@ -235,7 +235,7 @@ const App = () => {
         {/* NEW SECTION: AI-Generated Image Description */}
         {imageUrl && (
           <div className="w-full mt-8 space-y-4">
-            <h2 className="text-2xl font-bold text-indigo-400">AI-Generated Image Description</h2>
+            <h2 className="text-2xl font-bold text-indigo-400">Let me try explain wtf u just made</h2>
             <div className="bg-gray-700 p-6 rounded-xl shadow-inner min-h-[100px] flex items-center justify-center">
               {isVisionLoading ? (
                 <div className="flex items-center space-x-2">
