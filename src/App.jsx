@@ -181,7 +181,7 @@ const App = () => {
         </p>
 
         {/* Input area */}
-        <div className="w-full">me
+        <div className="w-full">
           <textarea
             className="w-full p-4 rounded-xl text-gray-900 bg-gray-200 focus:outline-none focus:ring-4 focus:ring-indigo-500 transition-all duration-300"
             rows="3"
