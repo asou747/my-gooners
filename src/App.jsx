@@ -187,7 +187,7 @@ const ImageGeneratorPanel = () => {
   return (
     <div
       className="bg-gray-800 rounded-3xl shadow-2xl p-4 sm:p-6"
-      style={{ aspectRatio: "1/1", minHeight: "26rem" }}
+      style={{ aspectRatio: "5/4", minHeight: "20rem" }}
     >
       <h2 className="text-2xl font-bold text-indigo-400 mb-2">AI Image Generator & Vision Analyzer by Alex</h2>
       <textarea
